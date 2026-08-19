@@ -1,0 +1,58 @@
+{
+  "name": "jira-axi",
+  "version": "0.1.0",
+  "description": "Jira Cloud CLI for agents — designed with AXI (Agent eXperience Interface).",
+  "keywords": [
+    "axi",
+    "agent",
+    "jira",
+    "jira-cloud",
+    "atlassian",
+    "cli",
+    "toon"
+  ],
+  "homepage": "https://github.com/nocnokneo/jira-axi#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nocnokneo/jira-axi.git"
+  },
+  "bugs": {
+    "url": "https://github.com/nocnokneo/jira-axi/issues"
+  },
+  "author": "Taylor Braun-Jones <taylor@braun-jones.org>",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "jira-axi": "dist/bin/jira-axi.js"
+  },
+  "main": "./dist/cli.js",
+  "types": "./dist/cli.d.ts",
+  "files": [
+    "dist",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/bin/jira-axi.ts",
+    "build:skill": "tsx scripts/build-skill.ts",
+    "check:skill": "tsx scripts/build-skill.ts --check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm run build:skill"
+  },
+  "dependencies": {
+    "@toon-format/toon": "^2.1.0",
+    "axi-sdk-js": "^0.1.10"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
