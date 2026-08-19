@@ -29,6 +29,15 @@ describe("key normalization", () => {
     expect(() => normalizeIssueKey("not a key")).toThrow(/is not a Jira issue key/);
   });
 
+  it("requires Jira's two-character minimum project key", () => {
+    // A single-character key is rejected by Jira, so reject it locally as a
+    // usage error rather than spending a round trip to find out.
+    expect(isIssueKey("A-1")).toBe(false);
+    expect(isIssueKey("AB-1")).toBe(true);
+    expect(() => normalizeProjectKey("A")).toThrow(/is not a project key/);
+    expect(normalizeProjectKey("ab")).toBe("AB");
+  });
+
   it("normalizes project keys", () => {
     expect(normalizeProjectKey("acme")).toBe("ACME");
     expect(() => normalizeProjectKey("ACME-1")).toThrow(/is not a project key/);

@@ -54,6 +54,7 @@ const searchSubcommand: Subcommand = {
       context.client(),
       query,
       project ? normalizeProjectKey(project) : undefined,
+      limit,
     );
 
     if (users.length === 0) {
@@ -67,16 +68,24 @@ const searchSubcommand: Subcommand = {
     }
 
     const shown = users.slice(0, limit);
+    const help: string[] = [];
+
+    // Jira returns one page and gives no total, so a full page may or may not be
+    // everything. Say that rather than implying the list is complete.
+    if (users.length >= limit) {
+      help.push(suggest(`${BIN} user search "${query}" --limit ${limit * 2}`, "in case more match"));
+    }
+    help.push(`${BIN} issue assign <key> --to ${shown[0]?.accountId ?? "<account-id>"}`);
 
     return {
-      count: shown.length === users.length ? `${shown.length}` : `${shown.length} of ${users.length}`,
+      count: users.length >= limit ? `${shown.length} (more may match)` : `${shown.length}`,
       users: shown.map((user) => ({
         name: userLabel(user),
         email: user.emailAddress ?? "hidden",
         account_id: user.accountId ?? "unknown",
         active: user.active !== false,
       })),
-      help: [`${BIN} issue assign <key> --to ${shown[0]?.accountId ?? "<account-id>"}`],
+      help,
     };
   },
 };

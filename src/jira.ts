@@ -33,8 +33,6 @@ export interface SearchResult {
   issues: JiraIssue[];
   /** Approximate total matching the query, when Jira could give one. */
   total?: number;
-  /** True when more pages exist beyond `issues`. */
-  hasMore: boolean;
 }
 
 interface JqlSearchResponse {
@@ -60,7 +58,6 @@ export async function searchIssues(
 ): Promise<SearchResult> {
   const issues: JiraIssue[] = [];
   let nextPageToken: string | undefined;
-  let hasMore = false;
 
   while (issues.length < options.limit) {
     const remaining = options.limit - issues.length;
@@ -80,14 +77,11 @@ export async function searchIssues(
 
     nextPageToken = response?.nextPageToken;
     if (!nextPageToken || page.length === 0) {
-      hasMore = false;
       break;
     }
-    // A token on the final requested page means results remain unfetched.
-    hasMore = true;
   }
 
-  return { issues: issues.slice(0, options.limit), hasMore };
+  return { issues: issues.slice(0, options.limit) };
 }
 
 /**
@@ -224,14 +218,22 @@ export async function resolveAccount(
   ]);
 }
 
+/** Jira caps a single user-search page at 1000. */
+const MAX_USER_RESULTS = 1000;
+
 export async function searchUsers(
   client: JiraClient,
   query: string,
   project?: string,
+  /** Rows the caller intends to show, passed through so the API is not asked for
+   * fewer than it will display. */
+  limit = 50,
 ): Promise<JiraUser[]> {
+  const maxResults = Math.min(Math.max(limit, 1), MAX_USER_RESULTS);
+
   if (project) {
     const assignable = await client.request<JiraUser[]>("/rest/api/3/user/assignable/search", {
-      query: { project, query, maxResults: 50 },
+      query: { project, query, maxResults },
       allow404: true,
     });
     if (assignable && assignable.length > 0) {
@@ -240,7 +242,7 @@ export async function searchUsers(
   }
 
   const users = await client.request<JiraUser[]>("/rest/api/3/user/search", {
-    query: { query, maxResults: 50 },
+    query: { query, maxResults },
   });
   return (users ?? []).filter((user) => user.accountId);
 }
@@ -251,8 +253,8 @@ export async function searchUsers(
 
 export interface Page<T> {
   values: T[];
+  /** Server-reported total for the collection, when it supplies one. */
   total?: number;
-  isLast: boolean;
 }
 
 /**
@@ -275,7 +277,6 @@ export async function paginate<T>(
   const values: T[] = [];
   let startAt = 0;
   let total: number | undefined;
-  let isLast = true;
 
   while (values.length < options.limit) {
     const response = await client.request<Record<string, unknown>>(path, {
@@ -297,18 +298,16 @@ export async function paginate<T>(
       total = response.total;
     }
 
-    const last = response.isLast === true || chunk.length === 0;
-    if (last) {
-      isLast = true;
+    // Jira signals the end either explicitly or by returning nothing further.
+    if (response.isLast === true || chunk.length === 0) {
+      break;
+    }
+    if (total !== undefined && values.length >= total) {
       break;
     }
 
     startAt += chunk.length;
-    isLast = total !== undefined ? values.length >= total : false;
-    if (isLast) {
-      break;
-    }
   }
 
-  return { values: values.slice(0, options.limit), total, isLast };
+  return { values: values.slice(0, options.limit), total };
 }

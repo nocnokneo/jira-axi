@@ -41,6 +41,7 @@
     "dev": "tsx src/bin/jira-axi.ts",
     "build:skill": "tsx scripts/build-skill.ts",
     "check:skill": "tsx scripts/build-skill.ts --check",
+    "pretest": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "npm run build && npm run build:skill"

@@ -184,7 +184,9 @@ stdin.
 an email often matches nothing. `--assignee` accepts `@me`, an account id, an
 email, a display name, or `none`, and names are resolved to account ids before
 they reach JQL. An ambiguous name is reported with the candidate account ids
-rather than guessed.
+rather than guessed. Jira returns user searches as a single page with no total,
+so a page filled to `--limit` is reported as `N (more may match)` rather than
+implying the list is complete.
 
 **Custom fields.** Find an id with `jira-axi field list -q "story points"`, then
 read it with `--fields <id>` or write it with `--field <id>=<value>`. Values that
@@ -209,7 +211,7 @@ Software projects. Empty results say so rather than looking broken.
 npm install
 npm run build         # compile TypeScript to dist/
 npm run dev -- issue list -p ACME
-npm test              # vitest, including integration tests against a stub Jira API
+npm test              # builds first, then runs vitest (two tests exercise dist/)
 npm run build:skill   # regenerate skills/jira-axi/SKILL.md
 npm run check:skill   # fail if the committed skill is stale
 ```

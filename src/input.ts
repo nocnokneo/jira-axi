@@ -109,6 +109,31 @@ export function validateDate(flag: string, value: string): string {
 }
 
 /**
+ * Render a calendar date as the Jira timestamp format `yyyy-MM-dd'T'HH:mm:ss.SSSZ`.
+ *
+ * `--started` names a calendar day, not an instant, so it is anchored at midday
+ * in the machine's own timezone using that date's real UTC offset (which accounts
+ * for DST). A hardcoded UTC time would silently move the worklog onto the
+ * adjacent day for anyone far enough east or west — at 09:00Z, every offset from
+ * -10 westward lands on the previous day. Midday local keeps the day intact in
+ * both directions.
+ */
+export function jiraDateTimestamp(date: string): string {
+  const [year, month, day] = date.split("-").map(Number) as [number, number, number];
+  const localNoon = new Date(year, month - 1, day, 12, 0, 0, 0);
+
+  // getTimezoneOffset() reports minutes to ADD to local to reach UTC, so it is
+  // the negation of the offset written in a timestamp.
+  const offsetMinutes = -localNoon.getTimezoneOffset();
+  const sign = offsetMinutes < 0 ? "-" : "+";
+  const absolute = Math.abs(offsetMinutes);
+  const hours = String(Math.floor(absolute / 60)).padStart(2, "0");
+  const minutes = String(absolute % 60).padStart(2, "0");
+
+  return `${date}T12:00:00.000${sign}${hours}${minutes}`;
+}
+
+/**
  * Parse a repeatable `--field key=value` escape hatch into a Jira fields object.
  * Values that parse as JSON are used as-is so an agent can set object-shaped
  * custom fields; everything else stays a string.

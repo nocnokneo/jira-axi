@@ -24,7 +24,13 @@ import {
   type JiraWorklog,
 } from "../format.js";
 import { bool, list, num, requireStr, str, type FlagSpec, type ParsedArgs } from "../flags.js";
-import { parseFieldAssignments, resolveText, validateDate, validateDuration } from "../input.js";
+import {
+  jiraDateTimestamp,
+  parseFieldAssignments,
+  resolveText,
+  validateDate,
+  validateDuration,
+} from "../input.js";
 import {
   allOf,
   approximateCount,
@@ -1469,7 +1475,7 @@ const worklogSubcommand: Subcommand = {
       body.comment = textToAdf(comment);
     }
     if (started !== undefined) {
-      body.started = jiraTimestamp(validateDate("started", started));
+      body.started = jiraDateTimestamp(validateDate("started", started));
     }
 
     const created = await context.client().request<JiraWorklog>(
@@ -1492,11 +1498,6 @@ const worklogSubcommand: Subcommand = {
     };
   },
 };
-
-/** Jira requires `yyyy-MM-dd'T'HH:mm:ss.SSSZ` with a numeric offset. */
-function jiraTimestamp(date: string): string {
-  return `${date}T09:00:00.000+0000`;
-}
 
 const worklogsSubcommand: Subcommand = {
   name: "worklogs",
@@ -1566,5 +1567,3 @@ export const issueNoun: Noun = {
     worklogsSubcommand,
   ],
 };
-
-export { renderIssueList, FILTER_FLAGS };

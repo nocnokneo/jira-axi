@@ -252,6 +252,31 @@ describe("user and field", () => {
     ]);
   });
 
+  it("asks the API for as many users as it will show", async () => {
+    stub.on("GET", "/rest/api/3/user/search", () => ({ body: [] }));
+
+    await cli(["user", "search", "al", "--limit", "200"]);
+
+    const request = stub.requestsFor("GET", "/user/search")[0];
+    expect(request?.query.get("maxResults")).toBe("200");
+  });
+
+  it("says more may match instead of implying a full page is everything", async () => {
+    // Jira returns one page with no total, so a page filled to the limit must
+    // not be reported as the complete result set.
+    stub.on("GET", "/rest/api/3/user/search", () => ({
+      body: Array.from({ length: 2 }, (_unused, index) => ({
+        accountId: `acct-${index}`,
+        displayName: `User ${index}`,
+      })),
+    }));
+
+    const result = await cli(["user", "search", "u", "--limit", "2"]);
+
+    expect(result.data.count).toBe("2 (more may match)");
+    expect((result.data.help as string[]).join(" ")).toContain("--limit 4");
+  });
+
   it("explains an empty user search", async () => {
     stub.on("GET", "/rest/api/3/user/search", () => ({ body: [] }));
     const result = await cli(["user", "search", "ghost"]);

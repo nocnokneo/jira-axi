@@ -14,8 +14,14 @@ export function jqlString(value: string): string {
   return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
-/** Jira issue key, e.g. `ACME-123`. */
-const ISSUE_KEY = /^[A-Za-z][A-Za-z0-9_]*-\d+$/;
+/**
+ * Jira issue key, e.g. `ACME-123`.
+ *
+ * The project part needs at least two characters because that is Jira's own
+ * minimum; accepting `A-1` only moved the rejection from a local usage error to
+ * a round trip that fails.
+ */
+const ISSUE_KEY = /^[A-Za-z][A-Za-z0-9_]+-\d+$/;
 
 export function isIssueKey(value: string): boolean {
   return ISSUE_KEY.test(value);
@@ -31,8 +37,8 @@ export function normalizeIssueKey(value: string): string {
   return trimmed.toUpperCase();
 }
 
-/** Project key, e.g. `ACME`. */
-const PROJECT_KEY = /^[A-Za-z][A-Za-z0-9_]*$/;
+/** Project key, e.g. `ACME`. Two characters minimum, as Jira requires. */
+const PROJECT_KEY = /^[A-Za-z][A-Za-z0-9_]+$/;
 
 export function normalizeProjectKey(value: string): string {
   const trimmed = value.trim();

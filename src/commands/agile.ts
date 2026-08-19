@@ -110,7 +110,7 @@ const boardViewSubcommand: Subcommand = {
       paginate<Sprint>(client, `/rest/agile/1.0/board/${id}/sprint`, {
         limit: 10,
         query: { state: "active,future" },
-      }).catch(() => ({ values: [] as Sprint[], total: undefined, isLast: true })),
+      }).catch(() => ({ values: [] as Sprint[], total: undefined })),
     ]);
 
     const active = sprints.values.filter((sprint) => sprint.state === "active");

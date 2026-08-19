@@ -12,6 +12,7 @@ import {
   truncate,
   userLabel,
 } from "../src/format.js";
+import { jiraDateTimestamp } from "../src/input.js";
 import { issue } from "./helpers/stub-jira.js";
 import type { JiraIssue } from "../src/format.js";
 
@@ -177,5 +178,48 @@ describe("countLine", () => {
     // are showing is wrong; say only what is certain.
     expect(countLine(10, 3)).toBe("showing 10");
     expect(countLine(10, undefined)).toBe("showing 10");
+  });
+});
+
+describe("jiraDateTimestamp", () => {
+  it("anchors a calendar date at midday with the machine's real offset", () => {
+    const stamp = jiraDateTimestamp("2026-08-18");
+
+    // The date must survive verbatim: a hardcoded UTC time used to shift the
+    // worklog onto the adjacent day for offsets at or below -10.
+    expect(stamp.startsWith("2026-08-18T12:00:00.000")).toBe(true);
+    expect(stamp).toMatch(/^\d{4}-\d{2}-\d{2}T12:00:00\.000[+-]\d{4}$/);
+  });
+
+  it("resolves to midday local on the requested date in any timezone", () => {
+    for (const zone of ["UTC", "Pacific/Honolulu", "Pacific/Kiritimati", "America/New_York", "Asia/Kolkata"]) {
+      const previous = process.env.TZ;
+      process.env.TZ = zone;
+      try {
+        const stamp = jiraDateTimestamp("2026-08-18");
+        const instant = new Date(stamp);
+        expect(Number.isFinite(instant.getTime()), `${zone}: ${stamp}`).toBe(true);
+        // Read the instant back in the same zone: it must still be the 18th.
+        const local = new Intl.DateTimeFormat("en-CA", {
+          timeZone: zone,
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(instant);
+        expect(local, `${zone}: ${stamp}`).toBe("2026-08-18");
+      } finally {
+        process.env.TZ = previous;
+      }
+    }
+  });
+
+  it("handles a half-hour offset zone", () => {
+    const previous = process.env.TZ;
+    process.env.TZ = "Asia/Kolkata";
+    try {
+      expect(jiraDateTimestamp("2026-08-18")).toBe("2026-08-18T12:00:00.000+0530");
+    } finally {
+      process.env.TZ = previous;
+    }
   });
 });
