@@ -2,6 +2,8 @@
 
 <p align="center">Jira Cloud CLI for agents — designed with <a href="https://axi.md">AXI</a> (Agent eXperience Interface).</p>
 
+<p align="center"><a href="https://github.com/nocnokneo/jira-axi/actions/workflows/ci.yml"><img src="https://github.com/nocnokneo/jira-axi/actions/workflows/ci.yml/badge.svg" alt="CI"></a></p>
+
 Issues, sprints, boards, and projects over the shell, with token-efficient
 [TOON](https://toonformat.dev/) output, contextual next-step suggestions, and
 structured error handling. Built for autonomous agents that reach Jira through
@@ -223,6 +225,9 @@ prints. `npm test` fails if the committed copy is out of date.
 The test suite runs the CLI against a stub Jira Cloud API over loopback HTTP
 rather than mocking the client, so argument parsing, credential resolution,
 error translation, and TOON encoding are all exercised end to end.
+
+GitHub Actions runs `npm test` on every push to `main` and every pull request,
+across Node 20, 22, and 24 (`.github/workflows/ci.yml`).
 
 ## License
 
